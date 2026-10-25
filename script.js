@@ -19,6 +19,55 @@
   var reduceMotion = window.matchMedia &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  /* ---------- dismiss the loading veil ---------- */
+  /* The veil must never trap the invitation, so this runs on its own path with
+     three independent triggers: fonts ready, window load, and a hard cap. */
+  var loaderDone = false;
+  var afterLoader = [];
+
+  function onLoaderDone(fn) {
+    if (loaderDone) fn();
+    else afterLoader.push(fn);
+  }
+
+  (function dismissLoader() {
+    var root = document.documentElement;
+    if (!root.classList.contains('js-loading')) { loaderDone = true; return; }
+
+    var start  = window.__ldrStart || Date.now();
+    var MIN_MS = reduceMotion ? 0 : 1900;   /* let the diya light up */
+    var MAX_MS = 5000;                      /* never wait longer than this */
+    var finished = false;
+
+    function finish() {
+      if (finished) return;
+      finished = true;
+      root.classList.remove('js-loading');
+      root.classList.add('js-loading--done');
+      loaderDone = true;
+      afterLoader.splice(0).forEach(function (fn) { fn(); });
+      var veil = document.getElementById('loader');
+      if (veil && veil.parentNode) {
+        setTimeout(function () { veil.parentNode.removeChild(veil); }, 900);
+      }
+    }
+
+    function schedule() {
+      var waited = Date.now() - start;
+      setTimeout(finish, Math.max(0, Math.min(MIN_MS - waited, MAX_MS - waited)));
+    }
+
+    if (document.fonts && document.fonts.ready && document.fonts.ready.then) {
+      document.fonts.ready.then(schedule)['catch'](schedule);
+    } else {
+      schedule();
+    }
+
+    window.addEventListener('load', schedule);
+    setTimeout(finish, MAX_MS);          /* absolute backstop */
+    setTimeout(finish, MIN_MS);
+  })();
+
   /* ---------- live countdown ---------- */
   var countdownEl = document.getElementById('countdown');
   var grid  = countdownEl && countdownEl.querySelector('.countdown__grid');
@@ -133,26 +182,28 @@
   });
 
   if (!reduceMotion && 'IntersectionObserver' in window) {
-    items.forEach(function (el, idx) {
-      el.style.setProperty('--delay', Math.min(idx * 0.08, 0.4).toFixed(2) + 's');
-      el.classList.add('reveal');
-    });
-
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        if (!entry.isIntersecting) return;
-        entry.target.classList.add('is-visible');
-        io.unobserve(entry.target);
+    onLoaderDone(function () {
+      items.forEach(function (el, idx) {
+        el.style.setProperty('--delay', Math.min(idx * 0.08, 0.4).toFixed(2) + 's');
+        el.classList.add('reveal');
       });
-    }, { threshold: 0.05, rootMargin: '0px 0px -4% 0px' });
 
-    items.forEach(function (el) { io.observe(el); });
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add('is-visible');
+          io.unobserve(entry.target);
+        });
+      }, { threshold: 0.05, rootMargin: '0px 0px -4% 0px' });
 
-    /* safety net: never leave content hidden */
-    window.addEventListener('load', function () {
-      items.forEach(function (el) {
-        var r = el.getBoundingClientRect();
-        if (r.top < window.innerHeight) el.classList.add('is-visible');
+      items.forEach(function (el) { io.observe(el); });
+
+      /* safety net: never leave content hidden */
+      window.addEventListener('load', function () {
+        items.forEach(function (el) {
+          var r = el.getBoundingClientRect();
+          if (r.top < window.innerHeight) el.classList.add('is-visible');
+        });
       });
     });
   }

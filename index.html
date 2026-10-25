@@ -12,8 +12,60 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Great+Vibes&family=Marcellus&family=Yatra+One&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+<script>
+/* Show the loading veil only when JavaScript can run, and remove it after 6s
+   regardless, so the invitation can never stay hidden behind it. */
+(function () {
+  var root = document.documentElement;
+  root.classList.add('js-loading');
+  window.__ldrStart = Date.now();
+  setTimeout(function () { root.classList.remove('js-loading'); }, 6000);
+})();
+</script>
 </head>
 <body>
+
+<!-- loading veil -->
+<div class="loader" id="loader" role="status" aria-label="Loading the invitation">
+  <div class="loader__inner">
+    <svg class="loader__art" viewBox="0 0 140 140" width="150" height="150" aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id="ldrBrass" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#F3E4BC"/>
+          <stop offset=".45" stop-color="#C9A227"/>
+          <stop offset="1" stop-color="#8A6A12"/>
+        </linearGradient>
+        <linearGradient id="ldrFlame" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0" stop-color="#E0701F"/>
+          <stop offset=".5" stop-color="#F5C55E"/>
+          <stop offset="1" stop-color="#FFF3CF"/>
+        </linearGradient>
+        <radialGradient id="ldrGlow" cx=".5" cy=".5" r=".5">
+          <stop offset="0" stop-color="#F5C55E" stop-opacity=".55"/>
+          <stop offset="1" stop-color="#F5C55E" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+
+      <circle class="loader__halo" cx="70" cy="72" r="46" fill="url(#ldrGlow)"/>
+
+      <path class="loader__arch" d="M18 124 L18 78 A52 52 0 0 1 122 78 L122 124"
+            pathLength="100"
+            fill="none" stroke="url(#ldrBrass)" stroke-width="2.2" stroke-linecap="round"/>
+
+      <path class="loader__flame"
+            d="M70 38 C 79 55, 84 65, 84 76 A 14 14 0 0 1 56 76 C 56 65, 61 55, 70 38 Z"
+            fill="url(#ldrFlame)"/>
+
+      <path class="loader__bowl" d="M30 88 C 44 118, 96 118, 110 88 Z" fill="url(#ldrBrass)"/>
+      <path class="loader__rim" d="M26 88 L114 88" fill="none" stroke="#F3E4BC"
+            stroke-width="1.6" stroke-linecap="round"/>
+    </svg>
+
+    <p class="loader__shloka" aria-hidden="true">॥ श्री गणेशाय नमः ॥</p>
+    <p class="loader__names" aria-hidden="true">Nikita &amp; Hari</p>
+    <span class="loader__sweep" aria-hidden="true"></span>
+  </div>
+</div>
 
 <!-- floating flower petals -->
 <div class="petals" id="petals" aria-hidden="true"></div>
